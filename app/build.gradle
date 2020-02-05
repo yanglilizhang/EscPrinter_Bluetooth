@@ -1,0 +1,29 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion '28.0.3'
+
+    defaultConfig {
+        applicationId "com.lvrenyang.myprinter"
+        minSdkVersion 9
+        targetSdkVersion 19
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_1_5
+            targetCompatibility JavaVersion.VERSION_1_5
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.android.support:support-v4:19.1.0'
+    implementation files('libs/printerlibs.jar')
+    implementation files('libs/zxing_core_3.0.1.jar')
+}
