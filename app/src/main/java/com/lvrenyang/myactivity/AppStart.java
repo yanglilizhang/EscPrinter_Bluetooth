@@ -13,46 +13,45 @@ import android.util.Log;
 
 public class AppStart extends Activity {
 
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.start_private);
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.start_private);
 
-		new Handler().postDelayed(new Runnable() {
+        new Handler().postDelayed(new Runnable() {
 
-			public void run() {
-				/* 启动蓝牙 */
-				BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-				if (null != adapter) {
-					if (!adapter.isEnabled()) {
-						if (adapter.enable()) {
-							// while(!adapter.isEnabled());
-							Log.v("SearchBTAndConnectActivity",
-									"Enable BluetoothAdapter");
-						} else {
-							finish();
-							return;
-						}
-					}
-				}
+            public void run() {
+                // TODO: 2020/9/21 启动蓝牙
+                BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+                if (null != adapter) {
+                    if (!adapter.isEnabled()) {
+                        if (adapter.enable()) {
+                            // while(!adapter.isEnabled());
+                            Log.v("SearchBTAndConnectActivity",
+                                    "Enable BluetoothAdapter");
+                        } else {
+                            finish();
+                            return;
+                        }
+                    }
+                }
 
-				/* 启动WIFI */
-				WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-				switch (wifiManager.getWifiState()) {
-				case WifiManager.WIFI_STATE_DISABLED:
-					wifiManager.setWifiEnabled(true);
-					break;
-				default:
-					break;
-				}
+                /* 启动WIFI */
+                WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+                switch (wifiManager.getWifiState()) {
+                    case WifiManager.WIFI_STATE_DISABLED:
+                        wifiManager.setWifiEnabled(true);
+                        break;
+                    default:
+                        break;
+                }
 
-				Intent intent = new Intent(AppStart.this, MainActivity.class);
-				startActivity(intent);
-				AppStart.this.finish();
-			}
+                Intent intent = new Intent(AppStart.this, MainActivity.class);
+                startActivity(intent);
+                AppStart.this.finish();
+            }
 
-		}, 1000);
-	}
+        }, 1000);
+    }
 
 }

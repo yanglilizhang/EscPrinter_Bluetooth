@@ -23,8 +23,7 @@ public class CustomApp extends Application {
 
     public void setLanguage() {
         Resources resources=getResources();
-        final SharedPreferences sharedPreferences=getSharedPreferences("language_choice"
-                , Context.MODE_PRIVATE);
+        final SharedPreferences sharedPreferences=getSharedPreferences("language_choice", Context.MODE_PRIVATE);
 
         int language_id = sharedPreferences.getInt("id", 2);
         // 获取应用内语言

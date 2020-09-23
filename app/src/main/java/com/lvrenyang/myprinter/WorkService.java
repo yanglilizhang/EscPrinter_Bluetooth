@@ -26,7 +26,6 @@ public class WorkService extends Service {
 
 	@Override
 	public IBinder onBind(Intent arg0) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
@@ -58,7 +57,7 @@ public class WorkService extends Service {
 		Log.v("DrawerService", "onDestroy");
 	}
 
-	static class MHandler extends Handler {
+	public static class MHandler extends Handler {
 
 		WeakReference<WorkService> mService;
 
@@ -72,30 +71,19 @@ public class WorkService extends Service {
 		}
 	}
 
-	/**
-	 * 
-	 * @param handler
-	 */
+
 	public static void addHandler(Handler handler) {
 		if (!targetsHandler.contains(handler)) {
 			targetsHandler.add(handler);
 		}
 	}
 
-	/**
-	 * 
-	 * @param handler
-	 */
 	public static void delHandler(Handler handler) {
 		if (targetsHandler.contains(handler)) {
 			targetsHandler.remove(handler);
 		}
 	}
 
-	/**
-	 * 
-	 * @param msg
-	 */
 	public static void notifyHandlers(Message msg) {
 		for (int i = 0; i < targetsHandler.size(); i++) {
 			Message message = Message.obtain(msg);

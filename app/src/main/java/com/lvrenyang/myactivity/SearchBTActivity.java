@@ -28,191 +28,182 @@ import com.lvrenyang.myprinter.R;
 import com.lvrenyang.utils.DataUtils;
 import com.lvrenyang.utils.TimeUtils;
 
+/**
+ * 搜索并连接 连接4.0蓝牙-2012年最新蓝牙版本
+ */
 public class SearchBTActivity extends Activity implements OnClickListener {
+    private LinearLayout linearlayoutdevices;
+    private ProgressBar progressBarSearchStatus;
+    private ProgressDialog dialog;
 
-	private LinearLayout linearlayoutdevices;
-	private ProgressBar progressBarSearchStatus;
-	private ProgressDialog dialog;
+    private BroadcastReceiver broadcastReceiver = null;
+    private IntentFilter intentFilter = null;
 
-	private BroadcastReceiver broadcastReceiver = null;
-	private IntentFilter intentFilter = null;
+    private static Handler mHandler = null;
+    private static String TAG = "SearchBTActivity";
 
-	private static Handler mHandler = null;
-	private static String TAG = "SearchBTActivity";
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_searchbt);
 
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_searchbt);
+        findViewById(R.id.buttonSearch).setOnClickListener(this);
+        progressBarSearchStatus = (ProgressBar) findViewById(R.id.progressBarSearchStatus);
+        linearlayoutdevices = (LinearLayout) findViewById(R.id.linearlayoutdevices);
+        dialog = new ProgressDialog(this);
 
-		findViewById(R.id.buttonSearch).setOnClickListener(this);
-		progressBarSearchStatus = (ProgressBar) findViewById(R.id.progressBarSearchStatus);
-		linearlayoutdevices = (LinearLayout) findViewById(R.id.linearlayoutdevices);
-		dialog = new ProgressDialog(this);
+        initBroadcast();
 
-		initBroadcast();
+        mHandler = new MHandler(this);
+        WorkService.addHandler(mHandler);
+    }
 
-		mHandler = new MHandler(this);
-		WorkService.addHandler(mHandler);
-	}
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        WorkService.delHandler(mHandler);
+        mHandler = null;
+        uninitBroadcast();
+    }
 
-	@Override
-	protected void onDestroy() {
-		super.onDestroy();
-		WorkService.delHandler(mHandler);
-		mHandler = null;
-		uninitBroadcast();
-	}
+    public void onClick(View arg0) {
+        switch (arg0.getId()) {
+            case R.id.buttonSearch: {
+                BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+                if (null == adapter) {
+                    finish();
+                    break;
+                }
 
-	public void onClick(View arg0) {
-		// TODO Auto-generated method stub
-		switch (arg0.getId()) {
-		case R.id.buttonSearch: {
-			BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-			if (null == adapter) {
-				finish();
-				break;
-			}
+                if (!adapter.isEnabled()) {
+                    if (adapter.enable()) {
+                        while (!adapter.isEnabled()) ;
+                        Log.v(TAG, "Enable BluetoothAdapter");
+                    } else {
+                        finish();
+                        break;
+                    }
+                }
 
-			if (!adapter.isEnabled()) {
-				if (adapter.enable()) {
-					while (!adapter.isEnabled())
-						;
-					Log.v(TAG, "Enable BluetoothAdapter");
-				} else {
-					finish();
-					break;
-				}
-			}
-			
-			if(null != WorkService.workThread)
-			{
-				WorkService.workThread.disconnectBt();
-				TimeUtils.WaitMs(10);
-			}
-			adapter.cancelDiscovery();
-			linearlayoutdevices.removeAllViews();
-			TimeUtils.WaitMs(10);
-			adapter.startDiscovery();
-			break;
-		}
-		}
-	}
+                if (null != WorkService.workThread) {
+                    WorkService.workThread.disconnectBt();
+                    TimeUtils.WaitMs(10);
+                }
+                adapter.cancelDiscovery();
+                linearlayoutdevices.removeAllViews();
+                TimeUtils.WaitMs(10);
+                adapter.startDiscovery();
+                break;
+            }
+        }
+    }
 
-	private void initBroadcast() {
-		broadcastReceiver = new BroadcastReceiver() {
+    private void initBroadcast() {
+        broadcastReceiver = new BroadcastReceiver() {
 
-			@Override
-			public void onReceive(Context context, Intent intent) {
-				// TODO Auto-generated method stub
-				String action = intent.getAction();
-				BluetoothDevice device = intent
-						.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                //android.bluetooth.device.extra.DEVICE
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                //android.bluetooth.device.action.FOUND
+                if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                    if (device == null)
+                        return;
+                    final String address = device.getAddress();
+                    String name = device.getName();
+                    if (name == null)
+                        name = "BT";
+                    else if (name.equals(address))
+                        name = "BT";
+                    Button button = new Button(context);
+                    button.setText(name + ": " + address);
+                    button.setGravity(android.view.Gravity.CENTER_VERTICAL | Gravity.LEFT);
+                    button.setOnClickListener(new OnClickListener() {
 
-				if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-					if (device == null)
-						return;
-					final String address = device.getAddress();
-					String name = device.getName();
-					if (name == null)
-						name = "BT";
-					else if (name.equals(address))
-						name = "BT";
-					Button button = new Button(context);
-					button.setText(name + ": " + address);
-					button.setGravity(android.view.Gravity.CENTER_VERTICAL
-							| Gravity.LEFT);
-					button.setOnClickListener(new OnClickListener() {
+                        public void onClick(View arg0) {
+                            WorkService.workThread.disconnectBt();
+                            // 只有没有连接且没有在用，这个才能改变状态 Connecting：地址
+                            dialog.setMessage(Global.toast_connecting + " " + address);
+                            dialog.setIndeterminate(true);
+                            dialog.setCancelable(false);
+                            dialog.show();
+                            WorkService.workThread.connectBt(address);
+                        }
+                    });
+                    button.getBackground().setAlpha(100);
+                    linearlayoutdevices.addView(button);
+                } else if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)) {
+                    //android.bluetooth.adapter.action.DISCOVERY_STARTED
+                    progressBarSearchStatus.setIndeterminate(true);
+                } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                    //android.bluetooth.adapter.action.DISCOVERY_FINISHED
+                    progressBarSearchStatus.setIndeterminate(false);
+                }
+            }
+        };
+        intentFilter = new IntentFilter();
+        intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
+        intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+        intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        registerReceiver(broadcastReceiver, intentFilter);
+    }
 
-						public void onClick(View arg0) {
-							// TODO Auto-generated method stub
-							WorkService.workThread.disconnectBt();
-							// 只有没有连接且没有在用，这个才能改变状态
-							dialog.setMessage(Global.toast_connecting + " "
-									+ address);
-							dialog.setIndeterminate(true);
-							dialog.setCancelable(false);
-							dialog.show();
-							WorkService.workThread.connectBt(address);
-						}
-					});
-					button.getBackground().setAlpha(100);
-					linearlayoutdevices.addView(button);
-				} else if (BluetoothAdapter.ACTION_DISCOVERY_STARTED
-						.equals(action)) {
-					progressBarSearchStatus.setIndeterminate(true);
-				} else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED
-						.equals(action)) {
-					progressBarSearchStatus.setIndeterminate(false);
-				}
+    private void uninitBroadcast() {
+        if (broadcastReceiver != null)
+            unregisterReceiver(broadcastReceiver);
+    }
 
-			}
+    public static class MHandler extends Handler {
 
-		};
-		intentFilter = new IntentFilter();
-		intentFilter.addAction(BluetoothDevice.ACTION_FOUND);
-		intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
-		intentFilter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-		registerReceiver(broadcastReceiver, intentFilter);
-	}
+        WeakReference<SearchBTActivity> mActivity;
 
-	private void uninitBroadcast() {
-		if (broadcastReceiver != null)
-			unregisterReceiver(broadcastReceiver);
-	}
+        MHandler(SearchBTActivity activity) {
+            mActivity = new WeakReference<SearchBTActivity>(activity);
+        }
 
-	static class MHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            SearchBTActivity theActivity = mActivity.get();
+            switch (msg.what) {
+                /**
+                 * DrawerService 的 onStartCommand会发送这个消息
+                 */
+                case Global.MSG_WORKTHREAD_SEND_CONNECTBTRESULT: {
+                    int result = msg.arg1;
+                    Toast.makeText(theActivity, (result == 1) ? Global.toast_success
+                            : Global.toast_fail, Toast.LENGTH_SHORT).show();
+                    Log.v(TAG, "Connect Result: " + result);
+                    //cancel
+                    theActivity.dialog.cancel();
+                    if (1 == result) {
+//                        PrintTest();
+                        Toast.makeText(theActivity, "开始打印了", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+                }
 
-		WeakReference<SearchBTActivity> mActivity;
+            }
+        }
 
-		MHandler(SearchBTActivity activity) {
-			mActivity = new WeakReference<SearchBTActivity>(activity);
-		}
-
-		@Override
-		public void handleMessage(Message msg) {
-			SearchBTActivity theActivity = mActivity.get();
-			switch (msg.what) {
-			/**
-			 * DrawerService 的 onStartCommand会发送这个消息
-			 */
-
-			case Global.MSG_WORKTHREAD_SEND_CONNECTBTRESULT: {
-				int result = msg.arg1;
-				Toast.makeText(
-						theActivity,
-						(result == 1) ? Global.toast_success
-								: Global.toast_fail, Toast.LENGTH_SHORT).show();
-				Log.v(TAG, "Connect Result: " + result);
-				theActivity.dialog.cancel();
-				if (1 == result) {
-					PrintTest();
-				}
-				break;
-			}
-
-			}
-		}
-
-		void PrintTest() {
-			String str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ\n0123456789\n";
-			byte[] tmp1 = { 0x1b, 0x40, (byte) 0xB2, (byte) 0xE2, (byte) 0xCA,
-					(byte) 0xD4, (byte) 0xD2, (byte) 0xB3, 0x0A };
-			byte[] tmp2 = { 0x1b, 0x21, 0x01 };
-			byte[] tmp3 = { 0x0A, 0x0A, 0x0A, 0x0A };
-			byte[] buf = DataUtils.byteArraysToBytes(new byte[][] { tmp1,
-					str.getBytes(), tmp2, str.getBytes(), tmp3 });
-			if (WorkService.workThread.isConnected()) {
-				Bundle data = new Bundle();
-				data.putByteArray(Global.BYTESPARA1, buf);
-				data.putInt(Global.INTPARA1, 0);
-				data.putInt(Global.INTPARA2, buf.length);
-				WorkService.workThread.handleCmd(Global.CMD_WRITE, data);
-			} else {
-				Toast.makeText(mActivity.get(), Global.toast_notconnect,
-						Toast.LENGTH_SHORT).show();
-			}
-		}
-	}
+        void PrintTest() {
+            String str = "诫勉等问责处理。\n0123456789\n";
+            byte[] tmp1 = {0x1b, 0x40, (byte) 0xB2, (byte) 0xE2, (byte) 0xCA,
+                    (byte) 0xD4, (byte) 0xD2, (byte) 0xB3, 0x0A};
+            byte[] tmp2 = {0x1b, 0x21, 0x01};
+            byte[] tmp3 = {0x0A, 0x0A, 0x0A, 0x0A};
+            byte[] buf = DataUtils.byteArraysToBytes(new byte[][]{tmp1,
+                    str.getBytes(), tmp2, str.getBytes(), tmp3});
+            if (WorkService.workThread.isConnected()) {
+                Bundle data = new Bundle();
+                data.putByteArray(Global.BYTESPARA1, buf);
+                data.putInt(Global.INTPARA1, 0);
+                data.putInt(Global.INTPARA2, buf.length);
+                WorkService.workThread.handleCmd(Global.CMD_WRITE, data);
+            } else {
+                Toast.makeText(mActivity.get(), Global.toast_notconnect, Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 
 }

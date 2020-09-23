@@ -27,7 +27,9 @@ import com.lvrenyang.myprinter.WorkService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
-
+/**
+ * 打印图片
+ */
 public class PictureActivity extends Activity implements OnClickListener {
 
 	private static final int RESULT_LOAD_IMAGE = 1;
@@ -100,7 +102,6 @@ public class PictureActivity extends Activity implements OnClickListener {
 	}
 
 	public void onClick(View arg0) {
-		// TODO Auto-generated method stub
 		switch (arg0.getId()) {
 		case R.id.buttonPrintPicture: {
 

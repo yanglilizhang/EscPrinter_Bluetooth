@@ -74,7 +74,6 @@ public class BarcodeActivity extends Activity implements OnClickListener {
 	}
 
 	public void onClick(View arg0) {
-		// TODO Auto-generated method stub
 		switch (arg0.getId()) {
 		case R.id.buttonPrintBarcode: {
 			String strBarcode = editTextBarcode.getText().toString();
@@ -96,8 +95,7 @@ public class BarcodeActivity extends Activity implements OnClickListener {
 				data.putInt(Global.INTPARA4, nHeight);
 				data.putInt(Global.INTPARA5, nHriFontType);
 				data.putInt(Global.INTPARA6, nHriFontPosition);
-				WorkService.workThread.handleCmd(Global.CMD_POS_SETBARCODE,
-						data);
+				WorkService.workThread.handleCmd(Global.CMD_POS_SETBARCODE, data);
 			} else {
 				Toast.makeText(this, Global.toast_notconnect, Toast.LENGTH_SHORT).show();
 			}

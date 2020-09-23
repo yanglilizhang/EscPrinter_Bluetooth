@@ -107,7 +107,6 @@ public class FormatTextActivity extends Activity implements OnClickListener,
 	}
 
 	public void onClick(View arg0) {
-		// TODO Auto-generated method stub
 		switch (arg0.getId()) {
 		case R.id.btPrintEnglish:
 		case R.id.btPrintChinese:
@@ -315,7 +314,6 @@ public class FormatTextActivity extends Activity implements OnClickListener,
 
 	public void onProgressChanged(SeekBar seekBar, int progress,
 			boolean fromUser) {
-		// TODO Auto-generated method stub
 		switch (seekBar.getId()) {
 		case R.id.sbLineHeight: {
 			nLineHeight = progress;
@@ -334,17 +332,14 @@ public class FormatTextActivity extends Activity implements OnClickListener,
 	}
 
 	public void onStartTrackingTouch(SeekBar seekBar) {
-		// TODO Auto-generated method stub
 
 	}
 
 	public void onStopTrackingTouch(SeekBar seekBar) {
-		// TODO Auto-generated method stub
 
 	}
 
 	public boolean onLongClick(View arg0) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
